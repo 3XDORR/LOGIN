@@ -676,48 +676,53 @@
         }
     
         // --- Fungsi Reset UI Telepon (Penuh) ---
-        function resetPhoneAuthUI() {
-            console.log("Resetting Phone Auth UI and reCAPTCHA state...");
-            if (phoneSignInBtnStart) {
-                 phoneSignInBtnStart.style.display = 'block';
-                 phoneSignInBtnStart.disabled = false;
-                 phoneSignInBtnStart.textContent = 'Login via Telepon';
-            }
-            if (phoneVerificationInputs) phoneVerificationInputs.style.display = 'none';
-            if (verificationCodeGroup) verificationCodeGroup.style.display = 'none';
-            if (verifyCodeBtn) verifyCodeBtn.style.display = 'none';
-            if (phoneNumberInput) {
-                 phoneNumberInput.value = '';
-                 phoneNumberInput.readOnly = false;
-            }
-            if (verificationCodeInput) verificationCodeInput.value = '';
-            if (sendCodeBtn) {
-                 sendCodeBtn.style.display = 'block';
-                 sendCodeBtn.disabled = false; // Aktifkan tombol kirim kode
-            }
-            if (phoneMessage) phoneMessage.textContent = '';
-    
-            // Hapus widget reCAPTCHA lama dari DOM dan reset variabel state
-            if (recaptchaContainer) recaptchaContainer.innerHTML = '';
-            recaptchaVerifier = null;
-            window.recaptchaWidgetId = undefined;
-            confirmationResult = null;
-            isRecaptchaSetupInProgress = false; // Pastikan flag juga direset
+    function resetPhoneAuthUI() {
+        console.log("Resetting Phone Auth UI and reCAPTCHA state...");
+        if (phoneSignInBtnStart) {
+             phoneSignInBtnStart.style.display = 'block';
+             phoneSignInBtnStart.disabled = false;
+             phoneSignInBtnStart.textContent = 'Login via Telepon';
         }
-    
-        // --- Fungsi Reset Sebagian (untuk Kirim Ulang Kode setelah Expired) ---
-        function resetPartialPhoneUIForResend() {
-             console.log("Resetting partial UI for code resend...");
-             if (phoneNumberInput) phoneNumberInput.readOnly = false; // Buka input nomor
-             if (sendCodeBtn) sendCodeBtn.style.display = 'block'; // Tampilkan tombol kirim
-             if (sendCodeBtn) sendCodeBtn.disabled = false; // Aktifkan tombol kirim
-             if (verificationCodeGroup) verificationCodeGroup.style.display = 'none'; // Sembunyikan input kode
-             if (verifyCodeBtn) verifyCodeBtn.style.display = 'none'; // Sembunyikan tombol verifikasi
-             if (verificationCodeInput) verificationCodeInput.value = ''; // Kosongkan input kode
-             confirmationResult = null; // Hapus hasil konfirmasi lama
-             // Jangan reset recaptcha di sini, biarkan user mencoba lagi dengan nomor yang sama
-             // Jangan reset phoneSignInBtnStart
+        if (phoneVerificationInputs) phoneVerificationInputs.style.display = 'none';
+        if (verificationCodeGroup) verificationCodeGroup.style.display = 'none';
+        if (verifyCodeBtn) verifyCodeBtn.style.display = 'none';
+        if (phoneNumberInput) {
+             phoneNumberInput.value = '';
+             phoneNumberInput.readOnly = false;
         }
+        if (verificationCodeInput) verificationCodeInput.value = '';
+        if (sendCodeBtn) {
+             sendCodeBtn.style.display = 'block';
+             sendCodeBtn.disabled = false; // Aktifkan tombol kirim kode
+        }
+        if (phoneMessage) phoneMessage.textContent = '';
+
+        // === AWAL PERUBAHAN ===
+        // Cobalah untuk me-reset widget reCAPTCHA secara eksplisit SEBELUM membersihkan container
+        if (typeof grecaptcha !== 'undefined' && typeof window.recaptchaWidgetId !== 'undefined') {
+            // Pastikan objek grecaptcha sudah ada (script reCAPTCHA sudah dimuat)
+            // dan kita punya ID widget dari render sebelumnya
+            try {
+                console.log(`Attempting explicit grecaptcha.reset for widget ID: ${window.recaptchaWidgetId}`);
+                grecaptcha.reset(window.recaptchaWidgetId);
+                console.log(`grecaptcha.reset called successfully for widget ID: ${window.recaptchaWidgetId}`);
+            } catch (error) {
+                console.warn("Could not explicitly reset grecaptcha widget:", error);
+                // Kegagalan di sini mungkin tidak fatal, lanjutkan pembersihan manual
+            }
+        } else {
+             if (typeof grecaptcha === 'undefined') console.warn("grecaptcha object not found during reset.");
+             if (typeof window.recaptchaWidgetId === 'undefined') console.warn("recaptchaWidgetId not found during reset.");
+        }
+        // === AKHIR PERUBAHAN ===
+
+        // Lanjutkan pembersihan manual seperti sebelumnya
+        if (recaptchaContainer) recaptchaContainer.innerHTML = ''; // Bersihkan container
+        recaptchaVerifier = null; // Hapus referensi ke instance lama
+        window.recaptchaWidgetId = undefined; // Hapus ID widget
+        confirmationResult = null;
+        isRecaptchaSetupInProgress = false; // Pastikan flag juga direset
+    }
     
         // =======================================================
         // === AKHIR BAGIAN LOGIKA OTENTIKASI TELEPON (MODIFIKASI) ===
