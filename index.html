@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Registrasi Keren (Verifikasi Email)</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+            padding: 15px; /* Padding agar container tidak menempel di layar kecil */
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box; /* Include padding in width calculation */
+            overflow: hidden; /* Prevent content spill */
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #555;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box; /* Include padding in width calculation */
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #7b5aed;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #7b5aed;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 10px;
+        }
+         /* Tombol sekunder untuk aksi seperti kirim ulang verifikasi */
+         .btn-secondary {
+            background-color: #6c757d; /* Warna abu-abu */
+            margin-top: 5px; /* Sedikit jarak */
+         }
+         .btn-secondary:hover {
+             background-color: #5a6268;
+         }
+
+
+        .btn:hover {
+            background-color: #5f3dc4;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .google-btn {
+            background-color: #fff;
+            color: #444;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .google-btn:hover {
+            background-color: #f7f7f7;
+        }
+
+        .google-btn img {
+             margin-right: 10px;
+             vertical-align: middle;
+             width: 20px; /* Pastikan ukuran logo sesuai */
+             height: 20px;
+        }
+
+        .phone-btn {
+            background-color: #28a745; /* Warna hijau untuk telepon */
+        }
+
+        .phone-btn:hover {
+            background-color: #218838;
+        }
+
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #eee;
+            margin: 20px 0;
+        }
+
+        p {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        p a {
+            color: #7b5aed;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        p a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
+            min-height: 20px; /* Reserve space for messages */
+            font-size: 0.9rem;
+            line-height: 1.4; /* Agar teks multi-baris lebih nyaman dibaca */
+        }
+
+        .message.success {
+            color: green;
+        }
+
+        .message.error {
+            color: red;
+        }
+
+        /* Styling untuk Recaptcha (penting agar tidak mengganggu layout) */
+        #recaptcha-container div {
+          margin: 10px auto !important; /* Penting agar terpusat dan tidak aneh */
+        }
+         #recaptcha-container iframe {
+             display: block;
+             margin: 10px auto; /* Pusatkan iframe reCAPTCHA jika terlihat */
+         }
+
+
+        /* Responsif sederhana */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 25px; /* Kurangi padding di layar kecil */
+            }
+             .form-container h2 {
+                 font-size: 1.5rem; /* Kecilkan judul */
+             }
+        }
+    </style>
+    </head>
+<body>
+
+    <div class="container">
+        <div class="form-container" id="login-container">
+            <form id="login-form">
+                <h2>Login</h2>
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <p class="message" id="login-message"></p>
+                 <button type="button" id="resend-verification-btn" class="btn btn-secondary" style="display: none;">Kirim Ulang Email Verifikasi</button>
+                <hr>
+                <button type="button" id="google-signin-btn" class="btn google-btn">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
+                    Login dengan Google
+                </button>
+                <div id="phone-login-section" style="margin-top: 15px;">
+                     <p>Atau login dengan nomor telepon:</p>
+                     <button type="button" id="phone-signin-btn-start" class="btn phone-btn">Login via Telepon</button>
+                     <div id="recaptcha-container" style="margin-top: 10px;"></div>
+                     <div id="phone-verification-inputs" style="display: none; margin-top: 10px;">
+                         <div class="input-group">
+                             <label for="phone-number-input">Nomor Telepon</label>
+                             <input type="tel" id="phone-number-input" placeholder="Cth: +62812...">
+                         </div>
+                         <button type="button" id="send-code-btn" class="btn">Kirim Kode Verifikasi</button>
+                         <div class="input-group" id="verification-code-group" style="display: none; margin-top: 15px;">
+                              <label for="verification-code-input">Kode Verifikasi</label>
+                              <input type="text" id="verification-code-input" placeholder="Masukkan 6 digit kode">
+                         </div>
+                         <button type="button" id="verify-code-btn" class="btn" style="display: none;">Verifikasi Kode</button>
+                     </div>
+                     <p class="message" id="phone-message"></p>
+                </div>
+                 <p>Belum punya akun? <a href="#" id="show-register">Daftar di sini</a></p>
+            </form>
+        </div>
+
+        <div class="form-container" id="register-container" style="display: none;">
+            <form id="register-form">
+                <h2>Registrasi</h2>
+                <div class="input-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                 <div class="input-group">
+                    <label for="register-phone">Nomor Telepon (Opsional)</label>
+                    <input type="tel" id="register-phone" placeholder="+62812...">
+                 </div>
+                <button type="submit" class="btn">Daftar</button>
+                <p class="message" id="register-message"></p>
+                <p>Sudah punya akun? <a href="#" id="show-login">Login di sini</a></p>
+            </form>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script>
+        // Salin konfigurasi Firebase Anda di sini
+        const firebaseConfig = {
+            apiKey: "AIzaSyALQjNGLFeFPWrRA4PKe1Hw-6Qqo5x5NSc", // Ganti dengan API Key Anda
+            authDomain: "xdorrwar.firebaseapp.com",
+            projectId: "xdorrwar",
+            storageBucket: "xdorrwar.appspot.com", // Pastikan ini benar
+            messagingSenderId: "980171926257",
+            appId: "1:980171926257:web:eac0b192b3b01f57d89750",
+            measurementId: "G-4QVK2228T2"
+        };
+
+        // Inisialisasi Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // --- Dapatkan elemen DOM ---
+        // (Sama seperti sebelumnya...)
+        const loginContainer = document.getElementById('login-container');
+        const registerContainer = document.getElementById('register-container');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const googleSignInBtn = document.getElementById('google-signin-btn');
+        const showRegisterLink = document.getElementById('show-register');
+        const showLoginLink = document.getElementById('show-login');
+
+        const loginMessage = document.getElementById('login-message');
+        const registerMessage = document.getElementById('register-message');
+
+        // Tombol kirim ulang verifikasi
+        const resendVerificationBtn = document.getElementById('resend-verification-btn');
+
+        // Elemen telepon
+        const phoneSignInBtnStart = document.getElementById('phone-signin-btn-start');
+        const phoneVerificationInputs = document.getElementById('phone-verification-inputs');
+        const phoneNumberInput = document.getElementById('phone-number-input');
+        const sendCodeBtn = document.getElementById('send-code-btn');
+        const verificationCodeInput = document.getElementById('verification-code-input');
+        const verificationCodeGroup = document.getElementById('verification-code-group');
+        const verifyCodeBtn = document.getElementById('verify-code-btn');
+        const phoneMessage = document.getElementById('phone-message');
+        const recaptchaContainer = document.getElementById('recaptcha-container');
+
+        let recaptchaVerifier = null;
+        let confirmationResult = null;
+        let loggedInButUnverifiedUser = null; // Simpan user jika login tapi belum terverifikasi
+
+        // --- Fungsi untuk menampilkan pesan ---
+        function showMessage(element, message, isError = false) {
+            element.textContent = message;
+            element.className = 'message ' + (isError ? 'error' : 'success');
+            // Sembunyikan tombol resend secara default
+             resendVerificationBtn.style.display = 'none';
+        }
+
+        // --- Fungsi untuk beralih antara form Login dan Registrasi ---
+        function toggleForms(showRegister) {
+            loggedInButUnverifiedUser = null; // Reset user saat ganti form
+            if (showRegister) {
+                loginContainer.style.display = 'none';
+                registerContainer.style.display = 'block';
+            } else {
+                loginContainer.style.display = 'block';
+                registerContainer.style.display = 'none';
+            }
+            // Bersihkan pesan saat beralih form
+            loginMessage.textContent = '';
+            registerMessage.textContent = '';
+            phoneMessage.textContent = '';
+            resendVerificationBtn.style.display = 'none'; // Pastikan tombol resend disembunyikan
+            resetPhoneAuthUI();
+        }
+
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms(true);
+        });
+
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms(false);
+        });
+
+        // --- Event Listener untuk Registrasi Email/Password ---
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const phone = document.getElementById('register-phone').value;
+
+            showMessage(registerMessage, 'Mendaftarkan dan mengirim email verifikasi...', false);
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    console.log('Registrasi berhasil, mengirim verifikasi email untuk:', user.email);
+
+                    // *** KIRIM EMAIL VERIFIKASI ***
+                    return user.sendEmailVerification(); // Mengembalikan promise
+                })
+                .then(() => {
+                    // Email verifikasi berhasil dikirim
+                    showMessage(registerMessage, 'Registrasi berhasil! Silakan cek email Anda (termasuk folder spam) untuk link verifikasi. Setelah itu, Anda bisa login.', false);
+                    registerForm.reset();
+                    // Opsional: logout pengguna setelah registrasi agar harus login lagi setelah verifikasi
+                    auth.signOut();
+                    setTimeout(() => toggleForms(false), 4000); // Pindah ke login setelah 4 detik
+                })
+                .catch((error) => {
+                    console.error('Error registrasi atau kirim verifikasi:', error);
+                    let friendlyMessage = `Error: ${error.message}`;
+                    if (error.code === 'auth/email-already-in-use') {
+                        friendlyMessage = 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.';
+                    } else if (error.code === 'auth/weak-password') {
+                        friendlyMessage = 'Password terlalu lemah. Gunakan minimal 6 karakter.';
+                    } else if (error.code === 'auth/invalid-email') {
+                        friendlyMessage = 'Format email tidak valid.';
+                    }
+                    showMessage(registerMessage, friendlyMessage, true);
+                });
+        });
+
+        // --- Event Listener untuk Login Email/Password ---
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            showMessage(loginMessage, 'Logging in...', false);
+            loggedInButUnverifiedUser = null; // Reset
+             resendVerificationBtn.style.display = 'none'; // Sembunyikan tombol
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+
+                    // *** PERIKSA STATUS VERIFIKASI EMAIL ***
+                    if (user.emailVerified) {
+                        // Email sudah diverifikasi
+                        console.log('Login berhasil (Email terverifikasi):', user.email);
+                        showMessage(loginMessage, 'Login berhasil! Mengarahkan...', false);
+                        // TODO: Arahkan pengguna ke halaman setelah login
+                        // Contoh: window.location.href = '/dashboard.html';
+                    } else {
+                        // Email belum diverifikasi
+                        console.warn('Login berhasil TAPI email belum diverifikasi:', user.email);
+                        showMessage(loginMessage, 'Login berhasil, TETAPI email Anda belum diverifikasi. Silakan cek inbox email Anda (termasuk folder spam) untuk link verifikasi.', true); // Tampilkan sebagai 'error' atau warning
+                        loggedInButUnverifiedUser = user; // Simpan user untuk tombol resend
+                        resendVerificationBtn.style.display = 'block'; // Tampilkan tombol kirim ulang
+                        // Jangan arahkan pengguna, biarkan di halaman login
+                        // Logout pengguna agar tidak 'setengah' login
+                        auth.signOut();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error login:', error);
+                    let friendlyMessage = `Error: ${error.message}`;
+                     if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                         friendlyMessage = 'Email atau password salah. Silakan coba lagi.';
+                     } else if (error.code === 'auth/invalid-email') {
+                         friendlyMessage = 'Format email tidak valid.';
+                     } else if (error.code === 'auth/too-many-requests') {
+                         friendlyMessage = 'Terlalu banyak percobaan login. Coba lagi nanti.';
+                     }
+                    showMessage(loginMessage, friendlyMessage, true);
+                    resendVerificationBtn.style.display = 'none'; // Pastikan disembunyikan jika login gagal
+                });
+        });
+
+         // --- Event Listener untuk Tombol Kirim Ulang Verifikasi ---
+         resendVerificationBtn.addEventListener('click', () => {
+             if (loggedInButUnverifiedUser) {
+                 showMessage(loginMessage, 'Mengirim ulang email verifikasi...', false);
+                 loggedInButUnverifiedUser.sendEmailVerification()
+                     .then(() => {
+                         showMessage(loginMessage, 'Email verifikasi baru telah dikirim. Silakan cek inbox Anda.', false);
+                          resendVerificationBtn.style.display = 'none'; // Sembunyikan lagi setelah dikirim
+                          loggedInButUnverifiedUser = null; // Reset user
+                     })
+                     .catch((error) => {
+                         console.error('Error kirim ulang verifikasi:', error);
+                         showMessage(loginMessage, `Gagal mengirim ulang email: ${error.message}`, true);
+                         // Biarkan tombol tetap terlihat jika gagal
+                     });
+             } else {
+                 // Seharusnya tidak terjadi jika UI dikelola dengan benar
+                 showMessage(loginMessage, 'Tidak dapat mengirim ulang, coba login kembali.', true);
+                 resendVerificationBtn.style.display = 'none';
+             }
+         });
+
+
+        // --- Event Listener untuk Login Google ---
+        googleSignInBtn.addEventListener('click', () => {
+            // Login Google tidak memerlukan verifikasi email terpisah dari Firebase
+            // karena Google sudah memverifikasi email saat pembuatan akun Google.
+            const provider = new firebase.auth.GoogleAuthProvider();
+            showMessage(loginMessage, 'Membuka popup Google...', false);
+             resendVerificationBtn.style.display = 'none';
+
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    console.log('Login Google berhasil:', user);
+                    // Email dari Google dianggap terverifikasi
+                    showMessage(loginMessage, 'Login Google berhasil! Mengarahkan...', false);
+                    // TODO: Arahkan pengguna ke halaman setelah login
+                    // Contoh: window.location.href = '/dashboard.html';
+                }).catch((error) => {
+                    console.error('Error login Google:', error);
+                    let friendlyMessage = `Error: ${error.message}`;
+                     if (error.code === 'auth/popup-closed-by-user') {
+                         friendlyMessage = 'Anda menutup jendela login Google.';
+                     } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-blocked') {
+                         friendlyMessage = 'Popup Google diblokir atau dibatalkan. Izinkan popup untuk situs ini.';
+                     } else if (error.code === 'auth/account-exists-with-different-credential') {
+                         friendlyMessage = 'Akun dengan email ini sudah ada, coba login dengan metode lain.';
+                     }
+                    showMessage(loginMessage, friendlyMessage, true);
+                });
+        });
+
+        // --- Logika untuk Otentikasi Nomor Telepon ---
+        // (Kode untuk otentikasi telepon tetap sama seperti sebelumnya)
+        // ... (salin semua fungsi terkait telepon: setupRecaptcha, event listener phoneSignInBtnStart, sendCodeBtn, verifyCodeBtn, resetPhoneAuthUI) ...
+        function setupRecaptcha() {
+             recaptchaContainer.innerHTML = '';
+             return new Promise((resolve, reject) => {
+                try {
+                    recaptchaVerifier = new firebase.auth.RecaptchaVerifier(recaptchaContainer, {
+                        'size': 'invisible',
+                        'callback': (response) => { console.log("reCAPTCHA terverifikasi (callback)", response); },
+                        'expired-callback': () => {
+                            showMessage(phoneMessage, 'Verifikasi reCAPTCHA kadaluwarsa, mulai ulang proses.', true);
+                            resetPhoneAuthUI(); reject(new Error('reCAPTCHA expired'));
+                        },
+                        'error-callback': (error) => {
+                            console.error("Error reCAPTCHA:", error);
+                            showMessage(phoneMessage, 'Gagal memuat verifikasi reCAPTCHA. Periksa koneksi atau coba refresh.', true);
+                            resetPhoneAuthUI(); reject(error);
+                        }
+                    }, app);
+                    recaptchaVerifier.render().then((widgetId) => {
+                        console.log('reCAPTCHA widget ' + widgetId + ' dirender.');
+                         window.recaptchaWidgetId = widgetId;
+                         resolve();
+                     }).catch(error => {
+                        console.error("Error saat render reCAPTCHA:", error);
+                        showMessage(phoneMessage, 'Gagal menampilkan verifikasi reCAPTCHA.', true);
+                         resetPhoneAuthUI(); reject(error);
+                     });
+                } catch (error) {
+                     console.error("Error membuat RecaptchaVerifier:", error);
+                     showMessage(phoneMessage, 'Error setup verifikasi. Coba refresh halaman.', true);
+                     resetPhoneAuthUI(); reject(error);
+                }
+            });
+        }
+        phoneSignInBtnStart.addEventListener('click', async () => {
+            phoneSignInBtnStart.style.display = 'none';
+            phoneVerificationInputs.style.display = 'block';
+            showMessage(phoneMessage, 'Menyiapkan verifikasi...', false);
+            try {
+                 await setupRecaptcha();
+                 showMessage(phoneMessage, 'Masukkan nomor telepon Anda (format +62...).', false);
+                 phoneNumberInput.focus();
+            } catch (error) {
+                phoneSignInBtnStart.style.display = 'block';
+                phoneVerificationInputs.style.display = 'none';
+            }
+        });
+        sendCodeBtn.addEventListener('click', () => {
+            const phoneNumber = phoneNumberInput.value.trim();
+            if (!/^\+62\d{9,13}$/.test(phoneNumber)) {
+                showMessage(phoneMessage, 'Format nomor telepon salah. Gunakan +62 diikuti nomor (misal: +6281234567890).', true); return;
+            }
+            if (!recaptchaVerifier || !window.recaptchaWidgetId) {
+                 showMessage(phoneMessage, 'Verifikasi reCAPTCHA belum siap. Tunggu sebentar atau mulai ulang.', true);
+                 setupRecaptcha().catch(err => {}); return;
+            }
+            showMessage(phoneMessage, 'Mengirim kode verifikasi...', false);
+            const appVerifier = recaptchaVerifier;
+            auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+                .then((result) => {
+                    console.log('SMS terkirim.'); confirmationResult = result;
+                    showMessage(phoneMessage, 'Kode verifikasi telah dikirim ke ' + phoneNumber, false);
+                    verificationCodeGroup.style.display = 'block'; verifyCodeBtn.style.display = 'block';
+                    verificationCodeInput.focus(); sendCodeBtn.style.display = 'none';
+                    phoneNumberInput.readOnly = true;
+                }).catch((error) => {
+                    console.error('Error mengirim SMS:', error);
+                     let friendlyMessage = `Error: ${error.message}`;
+                     if (error.code === 'auth/invalid-phone-number') friendlyMessage = 'Nomor telepon tidak valid.';
+                     else if (error.code === 'auth/too-many-requests') friendlyMessage = 'Terlalu banyak permintaan kode ke nomor ini. Coba lagi nanti.';
+                     else if (error.code === 'auth/network-request-failed') friendlyMessage = 'Gagal mengirim kode. Periksa koneksi internet Anda.';
+                     else if (error.message.includes('reCAPTCHA')) friendlyMessage = 'Verifikasi reCAPTCHA gagal atau kadaluwarsa. Mulai ulang proses login telepon.';
+                    showMessage(phoneMessage, friendlyMessage, true);
+                     if (error.message.includes('reCAPTCHA') && recaptchaVerifier) { resetPhoneAuthUI(); }
+                     else {
+                        phoneNumberInput.readOnly = false; sendCodeBtn.style.display = 'block';
+                        verificationCodeGroup.style.display = 'none'; verifyCodeBtn.style.display = 'none';
+                        confirmationResult = null;
+                     }
+                });
+        });
+        verifyCodeBtn.addEventListener('click', () => {
+            const code = verificationCodeInput.value.trim();
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showMessage(phoneMessage, 'Masukkan 6 digit kode verifikasi.', true); return;
+            }
+            if (!confirmationResult) {
+                 showMessage(phoneMessage, 'Terjadi kesalahan atau sesi kadaluwarsa. Coba kirim ulang kode.', true);
+                 resetPhoneAuthUI(); return;
+            }
+            showMessage(phoneMessage, 'Memverifikasi kode...', false);
+            confirmationResult.confirm(code)
+                .then((result) => {
+                    const user = result.user; console.log('Login via telepon berhasil:', user);
+                    showMessage(phoneMessage, 'Login via telepon berhasil! Mengarahkan...', false);
+                    // TODO: Redirect user
+                })
+                .catch((error) => {
+                    console.error('Error verifikasi kode:', error);
+                     let friendlyMessage = `Error: ${error.message}`;
+                     if (error.code === 'auth/invalid-verification-code') friendlyMessage = 'Kode verifikasi salah. Silakan coba lagi.';
+                     else if (error.code === 'auth/code-expired') {
+                          friendlyMessage = 'Kode verifikasi sudah kadaluwarsa. Kirim ulang kode.';
+                          phoneNumberInput.readOnly = false; sendCodeBtn.style.display = 'block';
+                          verificationCodeGroup.style.display = 'none'; verifyCodeBtn.style.display = 'none';
+                          verificationCodeInput.value = ''; confirmationResult = null;
+                     }
+                    showMessage(phoneMessage, friendlyMessage, true);
+                    verificationCodeInput.focus(); verificationCodeInput.select();
+                });
+        });
+        function resetPhoneAuthUI() {
+             phoneSignInBtnStart.style.display = 'block';
+             phoneVerificationInputs.style.display = 'none';
+             verificationCodeGroup.style.display = 'none'; verifyCodeBtn.style.display = 'none';
+             phoneNumberInput.value = ''; verificationCodeInput.value = '';
+             phoneNumberInput.readOnly = false; sendCodeBtn.style.display = 'block';
+             phoneMessage.textContent = ''; recaptchaContainer.innerHTML = '';
+             recaptchaVerifier = null; window.recaptchaWidgetId = undefined;
+             confirmationResult = null;
+        }
+        // --- Akhir Kode Otentikasi Telepon ---
+
+
+        // --- Memantau status otentikasi ---
+        auth.onAuthStateChanged((user) => {
+            // Penting: onAuthStateChanged berjalan saat status berubah (login/logout)
+            // DAN juga saat halaman dimuat jika user sudah login sebelumnya.
+            if (user) {
+                console.log('Auth State Changed: Pengguna terdeteksi login -', user.uid);
+
+                // Cek verifikasi email HANYA jika metode loginnya adalah password
+                // Karena Google & Phone sudah terverifikasi oleh providernya.
+                const isEmailPasswordProvider = user.providerData.some(provider => provider.providerId === 'password');
+
+                if (isEmailPasswordProvider && !user.emailVerified) {
+                    console.warn('Auth State Changed: Pengguna login via email, TAPI belum terverifikasi.');
+                    // Jika pengguna memuat ulang halaman atau kembali tapi belum verifikasi
+                    // Tampilkan pesan di form login dan tombol resend.
+                    if(loginContainer.style.display === 'block') { // Hanya jika form login aktif
+                        showMessage(loginMessage, 'Email Anda belum diverifikasi. Silakan cek inbox Anda atau kirim ulang email verifikasi.', true);
+                        loggedInButUnverifiedUser = user; // Simpan user lagi
+                        resendVerificationBtn.style.display = 'block';
+                    }
+                    // Pertimbangkan untuk logout lagi jika ingin memaksa verifikasi
+                    // auth.signOut();
+                } else {
+                    // Pengguna login dan emailnya terverifikasi (atau login via Google/Phone)
+                    console.log('Auth State Changed: Pengguna login dan terverifikasi (atau non-email).');
+                     // TODO: Arahkan pengguna ke halaman utama jika dia berada di halaman login/register
+                    // const targetPage = '/dashboard.html';
+                    // const currentPage = window.location.pathname.split('/').pop();
+                    // if ((currentPage === 'index.html' || currentPage === '') && window.location.pathname !== targetPage) {
+                    //     console.log("Mengarahkan ke halaman utama...");
+                    //     window.location.href = targetPage;
+                    // }
+                }
+            } else {
+                // Pengguna logout atau belum login
+                console.log('Auth State Changed: Tidak ada pengguna yang login.');
+                 if (registerContainer.style.display !== 'block') {
+                    toggleForms(false);
+                 }
+                 resendVerificationBtn.style.display = 'none'; // Pastikan tombol resend disembunyikan
+                 loggedInButUnverifiedUser = null; // Hapus user
+                 // resetPhoneAuthUI(); // Sudah dipanggil di toggleForms
+            }
+        });
+
+        // Inisialisasi: Tampilkan form login saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleForms(false);
+        });
+
+    </script>
+    </body>
+</html>
